@@ -1,5 +1,9 @@
 version: '2'
 
+networks:
+  kafka-cluster-net:
+    driver: bridge
+
 services:
   kafka-ui:
     container_name: kafka-ui
@@ -7,6 +11,8 @@ services:
     restart: always
     ports:
       - 9080:8080
+    networks:
+      - kafka-cluster-net
     depends_on:
       - zookeeper0
       - zookeeper1
@@ -41,6 +47,8 @@ services:
       - ./volumes/zookeeper0/zk-logs:/var/lib/zookeeper/log
     ports:
       - 2181:2181
+    networks:
+      - kafka-cluster-net
   kafka0:
     container_name: kafka0
     image: confluentinc/cp-kafka:latest
@@ -52,6 +60,8 @@ services:
     ports:
       - 9092:9092
       - 9997:9997
+    networks:
+      - kafka-cluster-net
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181
@@ -68,6 +78,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-cluster-net
     volumes:
       - ./volumes/zookeeper1/zk-data:/var/lib/zookeeper/data
       - ./volumes/zookeeper1/zk-logs:/var/lib/zookeeper/log
@@ -82,6 +94,8 @@ services:
     ports:
       - 9093:9093
       - 9998:9998
+    networks:
+      - kafka-cluster-net
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
@@ -97,6 +111,8 @@ services:
     restart: always
     ports:
       - 8085:8085
+    networks:
+      - kafka-cluster-net
     depends_on:
       - zookeeper0
       - kafka0
@@ -115,6 +131,8 @@ services:
     restart: always
     ports:
       - 18085:8085
+    networks:
+      - kafka-cluster-net
     depends_on:
       - zookeeper1
       - kafka1
@@ -133,6 +151,8 @@ services:
     restart: always
     ports:
       - 8083:8083
+    networks:
+      - kafka-cluster-net
     depends_on:
       - kafka0
       - schemaregistry0
@@ -154,7 +174,10 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect0
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
   kafka-init-topics:
+    container_name: kafka-init-topics
     image: confluentinc/cp-kafka:latest
+    networks:
+      - kafka-cluster-net
     depends_on:
       - kafka1
     command: "bash -c 'echo Waiting for Kafka to be ready... && cub kafka-ready -b kafka1:29092 1 30 && kafka-topics --create --topic post-telemetry --partitions 2 --replication-factor 1 --if-not-exists --zookeeper zookeeper1:2181 && kafka-topics --create --topic post-telemetry --partitions 2 --replication-factor 1 --if-not-exists --zookeeper zookeeper0:2181'"
