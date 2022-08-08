@@ -10,7 +10,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     restart: always
     ports:
-      - 8000:8080
+      - 9080:8080
     networks:
       - kafka-cluster-net
     depends_on:
